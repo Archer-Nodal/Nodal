@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join the Waitlist — Nodal</title>
+  <link rel="icon" href="nodal.ico" type="image/x-icon" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #e8ecf2;
+      --card-bg: #ffffff;
+      --text-primary: #1a1a2e;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --accent: #4f6ef7;
+      --accent-glow: rgba(79, 110, 247, 0.35);
+      --border: rgba(0, 0, 0, 0.07);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .logo {
+      display: block;
+      margin-bottom: 48px;
+    }
+
+    .logo img {
+      height: 144px;
+      width: auto;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px;
+      box-shadow: 0 2px 24px rgba(0,0,0,0.06);
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+    }
+
+    @media (max-width: 560px) {
+      .card { padding: 36px 24px; }
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+      line-height: 1.2;
+    }
+
+    .card > p {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+    }
+
+    /* ── Inputs ── */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+    }
+
+    input[type="email"],
+    input[type="text"],
+    textarea {
+      font-family: inherit;
+      font-size: 1rem;
+      padding: 14px 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      color: var(--text-primary);
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    /* ── Optional section ── */
+    .optional-section {
+      margin-top: 20px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .optional-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .optional-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 3px 10px;
+    }
+
+    .optional-desc {
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    /* ── Submit ── */
+    .submit-row {
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    button[type="submit"] {
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 14px 40px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow:
+        0 0 0 6px var(--accent-glow),
+        0 4px 24px rgba(79, 110, 247, 0.4);
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+
+    button[type="submit"]:hover {
+      box-shadow:
+        0 0 0 10px var(--accent-glow),
+        0 8px 32px rgba(79, 110, 247, 0.5);
+      transform: translateY(-1px);
+    }
+
+    button[type="submit"]:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .error-msg {
+      font-size: 0.85rem;
+      color: #e55353;
+      margin-top: 8px;
+      display: none;
+    }
+
+    /* ── Success state ── */
+    #success {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .success-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #eef2ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .success-icon svg {
+      width: 28px;
+      height: 28px;
+      color: var(--accent);
+    }
+
+    #success h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    #success p {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    /* ── Back link ── */
+    .back-link {
+      margin-top: 24px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="logo">
+    <img src="nodal.svg" alt="Nodal" />
+  </a>
+
+  <div class="card">
+
+    <!-- Form -->
+    <div id="form-container">
+      <h1>Thank you for supporting Nodal!</h1>
+      <p>Please enter your email so we can contact you when early access is released.</p>
+
+      <form id="waitlist-form" novalidate>
+        <div class="field">
+          <input
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+            autocomplete="email"
+          />
+
+          <div class="optional-section">
+            <div class="optional-header">
+              <span class="optional-badge">Optional</span>
+            </div>
+            <p class="optional-desc">
+              Add your business name and other relevant information about your operations,
+              such as which software you use for online ordering and Point of Sale systems.
+              This helps Nodal understand the needs of their first clients and tailor our
+              tools for your preexisting software solutions.
+            </p>
+            <textarea
+              id="business-info"
+              name="business_info"
+              rows="10"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="submit-row">
+          <button type="submit">Notify me</button>
+          <p class="error-msg" id="error-msg">Something went wrong. Please try again.</p>
+        </div>
+      </form>
+    </div>
+
+    <!-- Success message (shown after submit) -->
+    <div id="success">
+      <div class="success-icon">
+        <svg viewBox="0 0 28 28" fill="none"><path d="M5 14l6 6L23 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h2>You're on the list!</h2>
+      <p>We'll be in touch when early access is ready.</p>
+    </div>
+
+  </div>
+
+  <a href="index.html" class="back-link">← Back to home</a>
+
+  <script>
+    document.getElementById('business-info').placeholder =
+      "My business is called [Business name]\n\nIn my business I use [Square, Lightspeed etc.] as a POS system.\n\nI use [Deliverect, Mr Yum, GloriaFood etc.] for online orders. \n\n Any additional information is greatly appreciated.";
+
+    const form = document.getElementById('waitlist-form');
+    const formContainer = document.getElementById('form-container');
+    const success = document.getElementById('success');
+    const errorMsg = document.getElementById('error-msg');
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+      errorMsg.style.display = 'none';
+
+      try {
+        const data = new FormData(form);
+        const res = await fetch('https://formspree.io/f/mwvdpoey', {
+          method: 'POST',
+          body: data,
+          headers: { Accept: 'application/json' }
+        });
+
+        if (res.ok) {
+          formContainer.style.display = 'none';
+          success.style.display = 'flex';
+        } else {
+          throw new Error();
+        }
+      } catch {
+        btn.disabled = false;
+        btn.textContent = 'Notify me';
+        errorMsg.style.display = 'block';
+      }
+    });
+  </script>
+
+</body>
+</html>
