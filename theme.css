@@ -1,0 +1,208 @@
+/* ---------------------------------------------------------------------------
+   Nodal brand tokens + the theme picker, shared by every page on the site.
+
+   The palette, the token names and the preset list are deliberately the same
+   as the app's (bot_pipeline/public/index.html) so the site and the product
+   read as one thing: deep navy ink, near-white surfaces, one pale-yellow
+   accent. theme.js maps a chosen 5-colour ramp onto these same variables as
+   inline overrides on <html>, so anything written in terms of them themes for
+   free - avoid hard-coded hex in the page stylesheets.
+   --------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+
+  /* Ramp-driven tokens: theme.js overrides exactly these (see THEME_VARS). */
+  --bg: #F8F9FA;
+  --panel: #FFFFFF;
+  --text: #0D2B52;
+  --muted: #596A83;
+  --accent: #0D2B52;
+  --accent-hover: #1A3D6E;
+  --on-accent: #FFFFFF;
+  --border: #E1E5EB;
+
+  /* Fixed across every theme, exactly as in the app: the pale yellow is what
+     still reads as "Nodal" whichever ramp is active, and error red is a
+     semantic rather than a stylistic choice. */
+  --brand-accent: #FFF59E;
+  --brand-accent-hover: #F7E97D;
+  --brand-ink: #0D2B52; /* text on the yellow - holds ~13:1, unlike white */
+  --error: #DE5454;
+
+  --shadow-sm: 0 2px 12px rgba(13, 43, 82, 0.06);
+  --shadow-md: 0 2px 24px rgba(13, 43, 82, 0.08);
+
+  /* Derived. Declared once here and computed at use time, so they follow both
+     the dark-scheme block below and any inline ramp override. The flat value
+     on each first line is the fallback for browsers without color-mix(), which
+     drop the second declaration as unparseable. */
+  --faint: #8494AB;
+  --faint: color-mix(in srgb, var(--muted) 72%, var(--bg));
+  --hover: #F4F6F8;
+  --hover: color-mix(in srgb, var(--muted) 10%, var(--panel));
+  --accent-glow: rgba(13, 43, 82, 0.18);
+  --accent-glow: color-mix(in srgb, var(--accent) 18%, transparent);
+  --brand-glow: rgba(255, 245, 158, 0.55);
+  --brand-glow: color-mix(in srgb, var(--brand-accent) 55%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0A1830;
+    --panel: #0D2B52;
+    --text: #F8F9FA;
+    --muted: #9AAAC2;
+    --accent: #2E5C94;
+    --accent-hover: #3A70B0;
+    --on-accent: #FFFFFF;
+    --border: #1E3A5F;
+    --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 2px 24px rgba(0, 0, 0, 0.45);
+    /* Re-stated (not just the flat fallbacks) so the derived tokens keep
+       following --muted/--accent here too - a later flat declaration would
+       otherwise win over the color-mix() ones above and freeze them. */
+    --faint: #7A8AA3;
+    --faint: color-mix(in srgb, var(--muted) 72%, var(--bg));
+    --hover: #17335A;
+    --hover: color-mix(in srgb, var(--muted) 10%, var(--panel));
+    --accent-glow: rgba(46, 92, 148, 0.28);
+    --accent-glow: color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+}
+
+/* The wordmark is inlined in each page so it can take its colour from the
+   theme (an <img> can't see these variables). Kept in sync with nodal.svg.
+   Each page sets .logo's width; the viewBox keeps the height in proportion,
+   including when a narrow screen caps the width. */
+.logo svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.logo .wordmark { fill: var(--text); }
+.logo .nodemark { fill: var(--muted); }
+
+/* ── Theme picker ─────────────────────────────────────────────────────────
+   Injected into every page by theme.js, so it needs no page markup. Fixed to
+   the top-right corner and prefixed to stay clear of page styles. */
+
+.nodal-theme {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.nodal-theme-launcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.nodal-theme-launcher:hover,
+.nodal-theme-launcher[aria-expanded="true"] {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+.nodal-theme-launcher svg {
+  width: 20px;
+  height: 20px;
+}
+
+.nodal-theme-panel {
+  width: 268px;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.nodal-theme-panel[hidden] { display: none; }
+
+.nodal-theme-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--faint);
+  margin-bottom: 10px;
+}
+
+.nodal-theme-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nodal-theme-preset {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.nodal-theme-preset:hover { border-color: var(--muted); }
+
+.nodal-theme-preset.selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 -3px 0 var(--brand-accent);
+}
+
+.nodal-theme-swatch {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.nodal-theme-preset-label {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.nodal-theme-note {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--faint);
+}
+
+@media (max-width: 640px) {
+  .nodal-theme { top: 10px; right: 10px; }
+  .nodal-theme-panel { width: min(268px, calc(100vw - 20px)); }
+}
+
+@media print {
+  .nodal-theme { display: none !important; }
+}

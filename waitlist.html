@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join the Waitlist for Nodal</title>
+  <link rel="icon" href="nodal.ico" type="image/x-icon" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Brand palette + theme picker, shared with the app. Blocking on purpose:
+       it applies a saved theme before the first paint. -->
+  <link rel="stylesheet" href="theme.css" />
+  <script src="theme.js"></script>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .logo {
+      display: block;
+      width: 381px;
+      max-width: 100%;
+      margin-bottom: 48px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px;
+      box-shadow: var(--shadow-md);
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+    }
+
+    @media (max-width: 560px) {
+      .card { padding: 36px 24px; }
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 14px;
+      line-height: 1.2;
+    }
+
+    .card > p {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    /* ── Inputs ── */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+    }
+
+    input[type="email"],
+    input[type="text"],
+    textarea {
+      font-family: inherit;
+      font-size: 1rem;
+      padding: 14px 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: var(--faint);
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    /* ── Optional section ── */
+    .optional-section {
+      margin-top: 20px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .optional-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .optional-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--faint);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 3px 10px;
+    }
+
+    .optional-desc {
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    /* ── Submit ── */
+    .submit-row {
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    /* Matches the landing page's CTA and the app's "New chat" button: brand
+       yellow behind fixed navy text, unchanged by whichever theme is active. */
+    button[type="submit"] {
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 14px 40px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      background: var(--brand-accent);
+      color: var(--brand-ink);
+      box-shadow:
+        0 0 0 6px var(--brand-glow),
+        var(--shadow-md);
+      transition: background 0.15s, box-shadow 0.2s, transform 0.15s;
+    }
+
+    button[type="submit"]:hover {
+      background: var(--brand-accent-hover);
+      box-shadow:
+        0 0 0 10px var(--brand-glow),
+        var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    button[type="submit"]:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .error-msg {
+      font-size: 0.85rem;
+      color: var(--error);
+      margin-top: 8px;
+      display: none;
+    }
+
+    /* ── Success state ── */
+    #success {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .success-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--brand-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .success-icon svg {
+      width: 28px;
+      height: 28px;
+      color: var(--brand-ink);
+    }
+
+    #success h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    #success p {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    /* ── Back link ── */
+    .back-link {
+      margin-top: 24px;
+      font-size: 0.85rem;
+      color: var(--faint);
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Wordmark inlined (rather than <img src="nodal.svg">) so it can take
+       its ink from the active theme. Paths kept in sync with nodal.svg. -->
+  <a href="index.html" class="logo">
+    <svg viewBox="0 0 630 238" fill-rule="evenodd" role="img" aria-label="Nodal">
+      <g class="wordmark" transform="translate(0,238) scale(0.1,-0.1)">
+        <path d="M3740 2180 c-19 -19 -20 -33 -20 -325 0 -168 -3 -305 -6 -305 -3 0
+-13 4 -23 10 -40 21 -149 30 -223 19 -254 -39 -427 -274 -388 -526 42 -272
+314 -448 580 -375 62 17 66 17 83 0 14 -15 34 -18 117 -18 157 0 140 -91 140
+770 0 861 17 770 -140 770 -87 0 -103 -3 -120 -20z m-78 -855 c69 -49 101
+-104 106 -181 10 -148 -85 -254 -228 -254 -72 0 -122 19 -169 63 -120 114 -81
+323 74 394 19 8 57 12 102 10 61 -2 78 -7 115 -32z"/>
+        <path d="M5270 2160 c-20 -20 -20 -33 -20 -740 0 -850 -17 -760 143 -760 88 0
+106 3 120 18 16 17 17 83 17 740 0 852 16 762 -140 762 -87 0 -103 -3 -120
+-20z"/>
+        <path d="M2380 1596 c-244 -46 -408 -279 -370 -523 49 -317 408 -491 685 -333
+216 124 295 393 181 617 -90 178 -297 277 -496 239z m201 -249 c25 -14 59 -44
+79 -72 31 -43 35 -58 38 -121 4 -64 1 -78 -24 -123 -48 -90 -115 -125 -226
+-119 -62 3 -80 8 -118 35 -149 102 -129 338 35 409 17 7 62 13 101 14 55 0 80
+-5 115 -23z"/>
+        <path d="M4540 1576 c-244 -46 -408 -279 -370 -523 42 -273 315 -449 581 -375
+64 18 67 18 78 0 10 -16 25 -18 120 -18 92 0 110 3 124 18 15 16 17 49 17 258
+0 257 -7 309 -54 402 -90 177 -297 276 -496 238z m185 -237 c50 -24 100 -76
+121 -125 20 -47 17 -141 -5 -189 -39 -84 -120 -135 -216 -135 -135 0 -234 98
+-235 233 0 96 57 185 144 223 48 21 139 17 191 -7z"/>
+      </g>
+      <g class="nodemark" transform="translate(0,238) scale(0.1,-0.1)">
+        <path d="M922 2184 l-22 -15 0 -739 0 -739 22 -15 c17 -12 48 -16 124 -16 86
+0 103 3 118 19 15 16 16 61 16 477 0 252 4 454 8 449 13 -15 448 -844 471
+-897 l20 -48 100 0 c116 0 121 4 121 90 0 35 -8 67 -26 103 -118 234 -700
+1325 -712 1335 -24 19 -211 16 -240 -4z"/>
+        <path d="M1740 2181 c-81 -38 -104 -135 -50 -209 54 -76 140 -79 209 -8 105
+108 -22 282 -159 217z"/>
+      </g>
+    </svg>
+  </a>
+
+  <div class="card">
+
+    <!-- Form -->
+    <div id="form-container">
+      <h1>Thank you for supporting Nodal!</h1>
+      <p>Please enter your email so we can contact you when early access is released.</p>
+
+      <form id="waitlist-form" novalidate>
+        <div class="field">
+          <input
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+            autocomplete="email"
+          />
+
+          <div class="optional-section">
+            <div class="optional-header">
+              <span class="optional-badge">Optional</span>
+            </div>
+            <p class="optional-desc">
+              Add your business name and other relevant information about your operations,
+              such as which software you use for online ordering and Point of Sale systems.
+              This helps Nodal understand the needs of their first clients and tailor our
+              tools for your preexisting software solutions.
+            </p>
+            <textarea
+              id="business-info"
+              name="business_info"
+              rows="10"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="submit-row">
+          <button type="submit">Notify me</button>
+          <p class="error-msg" id="error-msg">Something went wrong. Please try again.</p>
+        </div>
+      </form>
+    </div>
+
+    <!-- Success message (shown after submit) -->
+    <div id="success">
+      <div class="success-icon">
+        <svg viewBox="0 0 28 28" fill="none"><path d="M5 14l6 6L23 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h2>You're on the list!</h2>
+      <p>We'll be in touch when early access is ready.</p>
+    </div>
+
+  </div>
+
+  <a href="index.html" class="back-link">← Back to home</a>
+
+  <script>
+    document.getElementById('business-info').placeholder =
+      "My business is called [Business name]\n\nIn my business I use [Square, Lightspeed etc.] as a POS system.\n\nI use [Deliverect, Mr Yum, GloriaFood etc.] for online orders. \n\n Any additional information is greatly appreciated.";
+
+    const form = document.getElementById('waitlist-form');
+    const formContainer = document.getElementById('form-container');
+    const success = document.getElementById('success');
+    const errorMsg = document.getElementById('error-msg');
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+      errorMsg.style.display = 'none';
+
+      try {
+        const data = new FormData(form);
+        const res = await fetch('https://formspree.io/f/mwvdpoey', {
+          method: 'POST',
+          body: data,
+          headers: { Accept: 'application/json' }
+        });
+
+        if (res.ok) {
+          formContainer.style.display = 'none';
+          success.style.display = 'flex';
+        } else {
+          throw new Error();
+        }
+      } catch {
+        btn.disabled = false;
+        btn.textContent = 'Notify me';
+        errorMsg.style.display = 'block';
+      }
+    });
+  </script>
+
+</body>
+</html>

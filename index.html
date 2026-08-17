@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nodal - Clarity, fast.</title>
+  <link rel="icon" href="nodal.ico" type="image/x-icon" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Brand palette + theme picker, shared with the app. Blocking on purpose:
+       it applies a saved theme before the first paint. -->
+  <link rel="stylesheet" href="theme.css" />
+  <script src="theme.js"></script>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ── */
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 64px 0 56px;
+    }
+    
+    .logo {
+      display: block;
+      width: 381px;
+      max-width: 100%;
+      margin: 0 auto 8px;
+    }
+
+    .tagline {
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: var(--muted);
+      margin-bottom: 20px;
+      letter-spacing: 0.01em;
+    }
+
+    .hero-headline {
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      max-width: 700px;
+      margin: 0 auto 24px;
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 40px;
+    }
+
+    /* The hero's two yellow CTAs, matching the app's "New chat" button: brand
+       accent behind fixed navy text, a pairing that holds ~13:1 in every theme
+       (no preset overrides --brand-accent). */
+    .cta-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      /* Wide enough that the buttons' 10px hover glow rings don't touch. */
+      gap: 28px;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--brand-accent);
+      color: var(--brand-ink);
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 14px 32px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow:
+        0 0 0 6px var(--brand-glow),
+        var(--shadow-md);
+      transition: background 0.15s, box-shadow 0.2s, transform 0.15s;
+    }
+
+    .cta-btn:hover {
+      background: var(--brand-accent-hover);
+      box-shadow:
+        0 0 0 10px var(--brand-glow),
+        var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    /* ── Screenshot slideshow ──
+       Sits in the hero between the pitch and the CTA. The frame holds its aspect
+       ratio (all screenshots are the same 925x947) so nothing on the page shifts
+       while the images load or the slide changes. */
+    .shots {
+      position: relative;
+      max-width: 640px;
+      margin: 0 auto 40px;
+    }
+
+    .shots-frame {
+      position: relative;
+      aspect-ratio: 925 / 947;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    /* Every slide is stacked in the same box; the one carrying .active is the
+       visible one. Slides come in from the side they're travelling from and
+       settle to centre, so the direction of travel is legible rather than just a
+       dissolve. The script writes the off-centre transform per slide (it's the
+       only place that knows which way the deck just moved); .active clears it. */
+    .shot {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      opacity: 0;
+      transform: scale(1.05);
+      /* Decelerating ease: quick off the mark, gentle arrival. */
+      transition: opacity 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
+      will-change: opacity, transform;
+    }
+
+    .shot.active {
+      opacity: 1;
+      transform: none;
+      z-index: 1;
+    }
+
+    /* Timer readout: fills across the foot of the frame over one slide's life,
+       so the 2.5s is something you can see coming rather than a surprise. */
+    .shots-progress {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 3px;
+      z-index: 2;
+      background: color-mix(in srgb, var(--brand-accent) 18%, transparent);
+      transform-origin: left center;
+      overflow: hidden;
+    }
+
+    .shots-progress i {
+      display: block;
+      height: 100%;
+      background: var(--brand-accent);
+      transform: scaleX(0);
+      transform-origin: left center;
+    }
+
+    .shots-progress.running i {
+      animation: shots-fill var(--slide-ms, 2500ms) linear forwards;
+    }
+
+    @keyframes shots-fill {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+
+    .shots-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--muted);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      opacity: 0;
+      z-index: 3;
+      transition: opacity 0.25s, color 0.15s, transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+
+    /* Arrows stay out of the way until the viewer reaches for them - but a
+       keyboard user tabbing through must still be able to see where they are.
+       They slide in from behind the frame edge rather than blinking on. */
+    .shots:hover .shots-nav,
+    .shots-nav:focus-visible {
+      opacity: 1;
+      transform: translateY(-50%) translateX(0);
+    }
+
+    .shots-nav:hover { color: var(--text); }
+    .shots-nav svg { width: 16px; height: 16px; }
+    .shots-nav.prev { left: -18px; transform: translateY(-50%) translateX(14px); }
+    .shots-nav.next { right: -18px; transform: translateY(-50%) translateX(-14px); }
+    .shots-nav.prev:hover { transform: translateY(-50%) translateX(-2px); }
+    .shots-nav.next:hover { transform: translateY(-50%) translateX(2px); }
+
+    .shots-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    /* The marker for the current slide stretches into a pill rather than just
+       lighting up, which shows the deck moving even out of the corner of an eye. */
+    .shots-dot {
+      width: 8px;
+      height: 8px;
+      padding: 0;
+      border-radius: 100px;
+      border: none;
+      background: var(--border);
+      cursor: pointer;
+      transition: background 0.3s, width 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+
+    .shots-dot:hover { background: var(--muted); }
+
+    .shots-dot.active {
+      width: 24px;
+      background: var(--brand-accent);
+    }
+
+    /* Covers the frame so a click anywhere on the screenshot opens it full
+       size. One control rather than eight (only one slide is ever on show), so
+       there's a single stop for a keyboard user to tab to. */
+    .shots-open {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      border: none;
+      background: none;
+      cursor: zoom-in;
+      border-radius: 16px;
+    }
+
+    .shots-open:focus-visible {
+      outline: 2px solid var(--brand-accent);
+      outline-offset: 3px;
+    }
+
+    /* ── Full-size screenshot (lightbox) ──
+       The page keeps rendering behind a blurred, dimmed sheet, so it reads as
+       the screenshot lifting off the page rather than a new screen. */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 200; /* over the theme picker, which is fixed at 100 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5vh 5vw;
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    /* Where the blur is available the sheet can stay far lighter, since the
+       blur is doing the work of separating the screenshot from the page. */
+    @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+      .lightbox {
+        background: color-mix(in srgb, var(--bg) 45%, transparent);
+        -webkit-backdrop-filter: blur(16px) saturate(0.9);
+        backdrop-filter: blur(16px) saturate(0.9);
+      }
+    }
+
+    /* display:flex above would otherwise beat the UA rule for [hidden]. */
+    .lightbox[hidden] { display: none; }
+
+    .lightbox.open { opacity: 1; }
+
+    .lightbox-img {
+      max-width: 100%;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+      transform: scale(0.94);
+      transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .lightbox.open .lightbox-img { transform: scale(1); }
+
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--muted);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: color 0.15s, transform 0.15s;
+    }
+
+    .lightbox-close:hover { color: var(--text); transform: scale(1.08); }
+    .lightbox-close svg { width: 16px; height: 16px; }
+
+    @media (max-width: 720px) {
+      /* No room to hang the arrows outside the frame, and no hover to reveal
+         them on touch - the dots carry manual navigation instead. */
+      .shots-nav { display: none; }
+      .lightbox { padding: 0; }
+      .lightbox-img { max-height: 100vh; border-radius: 0; border: none; }
+    }
+
+    /* Nothing moves on its own here: the script also stops autoplaying, so the
+       progress bar has no countdown left to show. */
+    @media (prefers-reduced-motion: reduce) {
+      .shot {
+        transition: opacity 0.2s linear;
+        transform: none !important;
+      }
+      .shots-dot, .shots-nav { transition: background 0.2s, opacity 0.2s; }
+      .shots-progress { display: none; }
+      .lightbox-img { transition: none; transform: none; }
+    }
+
+    /* ── Accordion ── */
+    .accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 64px;
+    }
+
+    .accordion-item {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .accordion-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 28px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      text-align: left;
+      gap: 16px;
+      transition: background 0.15s;
+    }
+
+    /* Navy ink already carries the headings, so hover and open are shown by
+       surface and by the app's brand-accent marker rather than by recolouring
+       the text (which under the default theme is the accent colour already). */
+    .accordion-trigger:hover {
+      background: var(--hover);
+    }
+
+    .accordion-chevron {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      color: var(--faint);
+      transition: transform 0.25s ease;
+    }
+
+    .accordion-item.open .accordion-chevron {
+      transform: rotate(180deg);
+      color: var(--muted);
+    }
+
+    .accordion-item.open {
+      box-shadow: inset 3px 0 0 var(--brand-accent), var(--shadow-sm);
+    }
+
+    .accordion-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.28s ease;
+    }
+
+    .accordion-item.open .accordion-body {
+      grid-template-rows: 1fr;
+    }
+
+    .accordion-inner {
+      overflow: hidden;
+    }
+
+    .accordion-inner ul {
+      list-style: none;
+      padding: 0 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .accordion-inner li {
+      display: flex;
+      gap: 12px;
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    .accordion-inner li::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 8px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--faint);
+      gap: 20px;
+    }
+
+    @media (max-width: 600px) {
+      footer {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .footer-social a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      text-decoration: none;
+      transition: box-shadow 0.15s, color 0.15s;
+    }
+
+    .footer-social a:hover {
+      box-shadow: var(--shadow-sm);
+      color: var(--text);
+    }
+
+    .footer-social svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    footer a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Hero -->
+    <section class="hero">
+      <!-- Wordmark inlined (rather than <img src="nodal.svg">) so it can take
+           its ink from the active theme. Paths kept in sync with nodal.svg. -->
+      <div class="logo">
+        <svg viewBox="0 0 630 238" fill-rule="evenodd" role="img" aria-label="Nodal">
+          <g class="wordmark" transform="translate(0,238) scale(0.1,-0.1)">
+            <path d="M3740 2180 c-19 -19 -20 -33 -20 -325 0 -168 -3 -305 -6 -305 -3 0
+-13 4 -23 10 -40 21 -149 30 -223 19 -254 -39 -427 -274 -388 -526 42 -272
+314 -448 580 -375 62 17 66 17 83 0 14 -15 34 -18 117 -18 157 0 140 -91 140
+770 0 861 17 770 -140 770 -87 0 -103 -3 -120 -20z m-78 -855 c69 -49 101
+-104 106 -181 10 -148 -85 -254 -228 -254 -72 0 -122 19 -169 63 -120 114 -81
+323 74 394 19 8 57 12 102 10 61 -2 78 -7 115 -32z"/>
+            <path d="M5270 2160 c-20 -20 -20 -33 -20 -740 0 -850 -17 -760 143 -760 88 0
+106 3 120 18 16 17 17 83 17 740 0 852 16 762 -140 762 -87 0 -103 -3 -120
+-20z"/>
+            <path d="M2380 1596 c-244 -46 -408 -279 -370 -523 49 -317 408 -491 685 -333
+216 124 295 393 181 617 -90 178 -297 277 -496 239z m201 -249 c25 -14 59 -44
+79 -72 31 -43 35 -58 38 -121 4 -64 1 -78 -24 -123 -48 -90 -115 -125 -226
+-119 -62 3 -80 8 -118 35 -149 102 -129 338 35 409 17 7 62 13 101 14 55 0 80
+-5 115 -23z"/>
+            <path d="M4540 1576 c-244 -46 -408 -279 -370 -523 42 -273 315 -449 581 -375
+64 18 67 18 78 0 10 -16 25 -18 120 -18 92 0 110 3 124 18 15 16 17 49 17 258
+0 257 -7 309 -54 402 -90 177 -297 276 -496 238z m185 -237 c50 -24 100 -76
+121 -125 20 -47 17 -141 -5 -189 -39 -84 -120 -135 -216 -135 -135 0 -234 98
+-235 233 0 96 57 185 144 223 48 21 139 17 191 -7z"/>
+          </g>
+          <g class="nodemark" transform="translate(0,238) scale(0.1,-0.1)">
+            <path d="M922 2184 l-22 -15 0 -739 0 -739 22 -15 c17 -12 48 -16 124 -16 86
+0 103 3 118 19 15 16 16 61 16 477 0 252 4 454 8 449 13 -15 448 -844 471
+-897 l20 -48 100 0 c116 0 121 4 121 90 0 35 -8 67 -26 103 -118 234 -700
+1325 -712 1335 -24 19 -211 16 -240 -4z"/>
+            <path d="M1740 2181 c-81 -38 -104 -135 -50 -209 54 -76 140 -79 209 -8 105
+108 -22 282 -159 217z"/>
+          </g>
+        </svg>
+      </div>
+
+      <p class="tagline">Clarity, fast.</p>
+
+      <h1 class="hero-headline">The fastest way to understand your venue</h1>
+
+      <p class="hero-sub">
+        Nodal connects to the tools you already use and gives you clear daily insights,
+        stock-risk alerts, and demand patterns without changing how you work.
+      </p>
+
+      <!-- Screenshot slideshow. The slides are in the markup (not built by JS)
+           so with scripting off the first one still shows as a plain hero image;
+           the dots, arrows and timer are added by the script below. -->
+      <div class="shots" aria-roledescription="carousel" aria-label="Screenshots of Nodal">
+        <div class="shots-frame">
+          <img class="shot active" src="screenshots/01-home.png" alt="The Nodal home screen, with the venue's sections down the side and a box to ask a question." />
+          <img class="shot" src="screenshots/02-orders-trend.png" alt="A year of daily orders as a single trend line, with an average week and a 30-day forecast below." loading="lazy" />
+          <img class="shot" src="screenshots/03-orders-context.png" alt="The same orders graph overlaid with rainfall, temperature, inflation and household spending." loading="lazy" />
+          <img class="shot" src="screenshots/04-orders-90-days.png" alt="Ninety days of orders against weather and spending, with wet trading days marked." loading="lazy" />
+          <img class="shot" src="screenshots/05-orders-day-breakdown.png" alt="A single day's hour-by-hour order breakdown with the weather at each point." loading="lazy" />
+          <img class="shot" src="screenshots/06-reviews-summary.png" alt="Review ratings across Google and TripAdvisor with positive and negative feedback themes counted." loading="lazy" />
+          <img class="shot" src="screenshots/07-reviews-theme-trend.png" alt="A feedback theme tracked across a year, showing when customers mentioned kind staff." loading="lazy" />
+          <img class="shot" src="screenshots/08-reviews-responses.png" alt="Individual reviews with AI-suggested responses ready to copy." loading="lazy" />
+          <img class="shot" src="screenshots/09-reviews-notes.png" alt="Reviews with private notes attached and a response generated for a two-star complaint." loading="lazy" />
+          <img class="shot" src="screenshots/10-ai-chat.png" alt="NodalAI answering questions about orders and reviews, with generated graphs." loading="lazy" />
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <a href="waitlist.html" class="cta-btn">
+          Join the waitlist
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="contact.html" class="cta-btn">
+          Contact us
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <!-- Accordion -->
+    <div class="accordion">
+
+      <div class="accordion-item">
+        <button class="accordion-trigger">
+          Demand visualised, predicted and controlled
+          <svg class="accordion-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="accordion-body"><div class="accordion-inner"><ul>
+          <li>Nodal keeps track of all your past orders and their times and assembles them into a comprehensive line graph, making customer trends crystal clear.</li>
+          <li>Nodal uses a complex algorithm to predict upcoming demand fluctuations, using data from previous performance in relation to a range of factors such as inflation, weather, season and time of the week. Nodal also flags potential spikes in demand and factors them into its predictions before they happen by tracking local events such as sports games.</li>
+          <li>By visualising and predicting demand Nodal can ensure your business can prepare adequately and reduce wastage of perishable inputs, while identifying customer trends and dying products before it's too late.</li>
+          <li>Nodal is able to visualise your businesses' raw popularity over time by removing the effects of interfering factors from your demand trend.</li>
+        </ul></div></div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-trigger">
+          Intelligent AI ready for any question
+          <svg class="accordion-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="accordion-body"><div class="accordion-inner"><ul>
+          <li>AI isn't an add-on feature to Nodal, to us it's more than a buzzword and is central to our values of clarity and speed.</li>
+          <li>NodalAI exists to ensure any question you have about your business is answered. Our AI pipeline allows NodalAI to access a multitude of spreadsheet-like commands, using your questions to curate formulas to pull quantitative data from your order history and online reviews.</li>
+          <li>AI can make mistakes, that's why NodalAI gives clear-as-day references to all commands and calculations used through in-text expandable reference boxes.</li>
+          <li>NodalAI is based on succinctness and clarity, bridging the gap between human language and quantitative results by providing short and straight to the point answers unless prompted not to.</li>
+        </ul></div></div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-trigger">
+          Customer feedback quantified and resolved
+          <svg class="accordion-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="accordion-body"><div class="accordion-inner"><ul>
+          <li>Nodal curates online customer reviews from multiple channels, flagging recurring feedback points and categorising sentimental sentences.</li>
+          <li>Nodal matches review names to specific orders, allowing you to identify the source of the problem and fill in the gaps of the customer's experience.</li>
+          <li>Suggested responses are auto-generated for every new review, using a curated formula drawing knowledge from social science papers from top universities to maximise the chance of customers revisiting.</li>
+        </ul></div></div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-trigger">
+          Customer relationships grasped and maintained
+          <svg class="accordion-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="accordion-body"><div class="accordion-inner"><ul>
+          <li>Nodal uses the names of customers used in orders to identify regular customers and predict their orders. This allows you to reward customer loyalty more effectively and alertly, building strong customer relationships.</li>
+        </ul></div></div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-trigger">
+          Seamless integration
+          <svg class="accordion-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="accordion-body"><div class="accordion-inner"><ul>
+          <li>Nodal uses API integration to minimise the manual input of data. By pulling directly from POS software systems and online ordering platforms Nodal is able to update information seamlessly with no strings attached.</li>
+        </ul></div></div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer id="waitlist">
+      <span>© 2026 Nodal · <a href="privacy.html">Privacy Policy</a></span>
+      <span>Made in Newcastle Australia</span>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="mailto:contact@nodal-app.com">contact@nodal-app.com</a>
+        <div class="footer-social">
+          <!-- X / Twitter -->
+          <a href="https://x.com/NodalSoftware" aria-label="X" target="_blank" rel="noopener">
+            <svg viewBox="0 0 14 14" fill="none"><path d="M1 1l5 5.5L1 13h2l3.5-4 3.5 4H13L7.5 7 13 1h-2L7 5 3.5 1H1z" fill="currentColor"/></svg>
+          </a>
+          <!-- Facebook -->
+          <a href="#" aria-label="Facebook">
+            <svg viewBox="0 0 14 14" fill="none"><path d="M9 2H7.5C6.67 2 6 2.67 6 3.5V5H4v2h2v5h2V7h1.5L10 5H8V3.5c0-.28.22-.5.5-.5H9V2z" fill="currentColor"/></svg>
+          </a>
+          <!-- LinkedIn -->
+          <a href="#" aria-label="LinkedIn">
+            <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="3" height="3" rx=".5" fill="currentColor"/><rect x="1" y="5.5" width="3" height="7.5" rx=".5" fill="currentColor"/><path d="M5.5 5.5h2.8v1.1C8.6 6 9.5 5.5 10.5 5.5c1.6 0 2.5 1 2.5 3V13h-3V9c0-.8-.4-1.2-1-1.2-.7 0-1 .5-1 1.2V13h-3V5.5z" fill="currentColor"/></svg>
+          </a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    document.querySelectorAll('.accordion-trigger').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var item = btn.closest('.accordion-item');
+        item.classList.toggle('open');
+      });
+    });
+
+    /* ── Screenshot slideshow ──
+       Advances every 2.5s, wrapping. The timer is restarted (not just left
+       running) whenever the viewer steers, so a manual pick always gets its own
+       full turn rather than however much was left on the clock. */
+    (function() {
+      var SLIDE_MS = 2500;
+      var shots = document.querySelector('.shots');
+      if (!shots) return;
+
+      var slides = Array.prototype.slice.call(shots.querySelectorAll('.shot'));
+      if (slides.length < 2) return; // one screenshot: nothing to cycle
+
+      var frame = shots.querySelector('.shots-frame');
+      var index = slides.findIndex(function(s) { return s.classList.contains('active'); });
+      if (index < 0) index = 0;
+
+      // Distance a slide travels on its way in or out, as a share of the frame.
+      var TRAVEL = '9%';
+
+      var ARROWS = {
+        prev: '<svg viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        next: '<svg viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      };
+
+      function arrow(dir, label, step) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'shots-nav ' + dir;
+        btn.setAttribute('aria-label', label);
+        btn.innerHTML = ARROWS[dir];
+        btn.addEventListener('click', function() { go(index + step); });
+        shots.appendChild(btn);
+        return btn;
+      }
+      arrow('prev', 'Previous screenshot', -1);
+      arrow('next', 'Next screenshot', 1);
+
+      var dotsEl = document.createElement('div');
+      dotsEl.className = 'shots-dots';
+      var dots = slides.map(function(_, i) {
+        var dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'shots-dot';
+        dot.setAttribute('aria-label', 'Screenshot ' + (i + 1) + ' of ' + slides.length);
+        dot.addEventListener('click', function() { go(i); });
+        dotsEl.appendChild(dot);
+        return dot;
+      });
+      shots.appendChild(dotsEl);
+
+      var progress = document.createElement('div');
+      progress.className = 'shots-progress';
+      progress.innerHTML = '<i></i>';
+      progress.style.setProperty('--slide-ms', SLIDE_MS + 'ms');
+      frame.appendChild(progress);
+
+      // dir is +1 when the deck moved forwards, -1 backwards, 0 on first paint.
+      // The outgoing slide leaves against the travel and the incoming one enters
+      // with it, so a "next" reads as the deck sliding leftwards under the frame.
+      function render(dir) {
+        slides.forEach(function(slide, i) {
+          var active = i === index;
+          if (active) {
+            // Place it on its entry side with transitions off, flush that to the
+            // browser, then hand it back to CSS - which animates it home. Without
+            // the flush the two writes coalesce and the slide just appears.
+            if (dir) {
+              slide.style.transition = 'none';
+              slide.style.transform = 'translateX(' + (dir > 0 ? '' : '-') + TRAVEL + ') scale(1.05)';
+              void slide.offsetWidth;
+              slide.style.transition = '';
+            }
+            slide.style.transform = '';
+          } else {
+            slide.style.transition = '';
+            slide.style.transform = dir
+              ? 'translateX(' + (dir > 0 ? '-' : '') + TRAVEL + ') scale(1.05)'
+              : '';
+          }
+          slide.classList.toggle('active', active);
+          // Only the visible screenshot should reach a screen reader; the rest
+          // are the same UI at other moments, not eight separate things to hear.
+          slide.setAttribute('aria-hidden', active ? 'false' : 'true');
+        });
+        dots.forEach(function(dot, i) {
+          dot.classList.toggle('active', i === index);
+          dot.setAttribute('aria-current', i === index ? 'true' : 'false');
+        });
+      }
+
+      var timer = null;
+      // A viewer who has asked for reduced motion gets a slideshow that only
+      // moves when they move it.
+      var autoplay = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function stop() {
+        if (timer) { clearInterval(timer); timer = null; }
+        progress.classList.remove('running');
+      }
+
+      function start() {
+        stop();
+        // Hovering out of the frame, or focus leaving it, both land here while
+        // the full-size view is up - and nothing should advance behind it.
+        if (!autoplay || boxOpen) return;
+        timer = setInterval(function() { go(index + 1); }, SLIDE_MS);
+        // Restart the bar from empty alongside the interval. Pausing keeps no
+        // elapsed time (the interval doesn't either), so the two stay in step.
+        void progress.offsetWidth;
+        progress.classList.add('running');
+      }
+
+      function go(next) {
+        // Clicking the dot for the slide already showing shouldn't replay it -
+        // just give it a fresh turn on the clock.
+        if (next === index) { start(); return; }
+        var dir = next > index ? 1 : -1;
+        index = (next + slides.length) % slides.length;
+        render(dir);
+        start();
+      }
+
+      // Hovering or tabbing in reads as "I'm looking at this one" - hold it.
+      shots.addEventListener('mouseenter', stop);
+      shots.addEventListener('mouseleave', start);
+      shots.addEventListener('focusin', stop);
+      shots.addEventListener('focusout', start);
+
+      // Don't burn through the deck in a background tab: the viewer would come
+      // back to an arbitrary slide having seen none of them.
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden) stop(); else start();
+      });
+
+      // ── Full-size view ──
+      // The whole frame is one button, so it always opens whichever screenshot
+      // is currently showing.
+      var opener = document.createElement('button');
+      opener.type = 'button';
+      opener.className = 'shots-open';
+      opener.setAttribute('aria-label', 'View this screenshot full size');
+      frame.appendChild(opener);
+
+      var box = document.createElement('div');
+      box.className = 'lightbox';
+      box.setAttribute('role', 'dialog');
+      box.setAttribute('aria-modal', 'true');
+      box.setAttribute('aria-label', 'Screenshot, full size');
+      box.hidden = true;
+      box.innerHTML =
+        '<img class="lightbox-img" alt="" />' +
+        '<button type="button" class="lightbox-close" aria-label="Close">' +
+        '<svg viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>' +
+        '</button>';
+      var boxImg = box.querySelector('.lightbox-img');
+      var boxClose = box.querySelector('.lightbox-close');
+      document.body.appendChild(box);
+
+      var boxOpen = false;
+      var swiped = false; // set by the touch handlers below
+
+      function openBox() {
+        var slide = slides[index];
+        boxImg.src = slide.src;
+        boxImg.alt = slide.alt;
+        box.hidden = false;
+        // Locking the page behind the sheet would shift it left as the
+        // scrollbar goes; hold the width with padding in its place.
+        var gap = window.innerWidth - document.documentElement.clientWidth;
+        document.body.style.overflow = 'hidden';
+        if (gap > 0) document.body.style.paddingRight = gap + 'px';
+        void box.offsetWidth; // flush, so .open animates in rather than snapping
+        box.classList.add('open');
+        boxOpen = true;
+        stop(); // nothing should advance underneath while it's being read
+        boxClose.focus();
+      }
+
+      function closeBox() {
+        if (!boxOpen) return;
+        boxOpen = false;
+        box.classList.remove('open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        var done = function() { if (!boxOpen) box.hidden = true; };
+        box.addEventListener('transitionend', done, { once: true });
+        setTimeout(done, 400); // in case the transition never fires
+        opener.focus();
+        start();
+      }
+
+      opener.addEventListener('click', function() {
+        if (swiped) return; // the tap that ended a swipe isn't a tap to zoom
+        openBox();
+      });
+
+      boxClose.addEventListener('click', closeBox);
+      // Anywhere off the screenshot closes it.
+      box.addEventListener('click', function(e) {
+        if (e.target === box) closeBox();
+      });
+
+      box.addEventListener('keydown', function(e) {
+        // One control inside, so keeping focus is a matter of holding it there.
+        if (e.key === 'Tab') { e.preventDefault(); boxClose.focus(); }
+      });
+
+      // Swipe on touch, where the arrows are hidden.
+      var touchX = null;
+      frame.addEventListener('touchstart', function(e) {
+        stop();
+        swiped = false;
+        touchX = e.changedTouches[0].clientX;
+      }, { passive: true });
+      frame.addEventListener('touchend', function(e) {
+        if (touchX === null) return;
+        var dx = e.changedTouches[0].clientX - touchX;
+        touchX = null;
+        if (Math.abs(dx) > 40) {
+          swiped = true;
+          go(index + (dx < 0 ? 1 : -1));
+        } else {
+          start();
+        }
+      }, { passive: true });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && boxOpen) closeBox();
+      });
+
+      render(0);
+      start();
+    })();
+  </script>
+</body>
+</html>

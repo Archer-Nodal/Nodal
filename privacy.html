@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Our Privacy Policy</title>
+  <link rel="icon" href="nodal.ico" type="image/x-icon" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Brand palette + theme picker, shared with the app. Blocking on purpose:
+       it applies a saved theme before the first paint. -->
+  <link rel="stylesheet" href="theme.css" />
+  <script src="theme.js"></script>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 48px 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      display: block;
+      width: 212px;
+      max-width: 100%;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 52px 56px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    @media (max-width: 600px) {
+      .card { padding: 36px 24px; }
+    }
+
+    .policy-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .policy-date {
+      font-size: 0.85rem;
+      color: var(--faint);
+      margin-bottom: 32px;
+    }
+
+    .policy-intro {
+      font-size: 0.95rem;
+      line-height: 1.75;
+      color: var(--muted);
+      margin-bottom: 36px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .section p, .section li {
+      font-size: 0.9rem;
+      line-height: 1.75;
+      color: var(--muted);
+    }
+
+    .section p + p {
+      margin-top: 10px;
+    }
+
+    .section ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .section li {
+      display: flex;
+      gap: 10px;
+    }
+
+    .section li::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 9px;
+    }
+
+    /* Under the brand theme the accent is the same navy as the headings, so
+       links carry a standing underline rather than relying on colour alone. */
+    .section a {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .section a:hover {
+      color: var(--accent-hover);
+    }
+
+    .bottom-links {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--faint);
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      color: var(--text);
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: none;
+      border: 1px solid var(--accent);
+      border-radius: 100px;
+      padding: 7px 16px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .download-btn:hover {
+      background: var(--accent);
+      color: var(--on-accent);
+    }
+
+    .download-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    @media print {
+      /* Print on white in brand ink whatever theme is on screen. !important is
+         needed because theme.js applies a chosen ramp as inline styles on
+         <html>, which a plain rule here could not outrank. */
+      html {
+        --panel: #FFFFFF !important;
+        --bg: #FFFFFF !important;
+        --text: #0D2B52 !important;
+        --muted: #33445E !important;
+        --accent: #0D2B52 !important;
+        --border: #E1E5EB !important;
+      }
+      body { background: #fff; padding: 0; }
+      .logo, .bottom-links { display: none; }
+      .card {
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Wordmark inlined (rather than <img src="nodal.svg">) so it can take
+         its ink from the active theme. Paths kept in sync with nodal.svg. -->
+    <a href="index.html" class="logo">
+      <svg viewBox="0 0 630 238" fill-rule="evenodd" role="img" aria-label="Nodal">
+      <g class="wordmark" transform="translate(0,238) scale(0.1,-0.1)">
+        <path d="M3740 2180 c-19 -19 -20 -33 -20 -325 0 -168 -3 -305 -6 -305 -3 0
+-13 4 -23 10 -40 21 -149 30 -223 19 -254 -39 -427 -274 -388 -526 42 -272
+314 -448 580 -375 62 17 66 17 83 0 14 -15 34 -18 117 -18 157 0 140 -91 140
+770 0 861 17 770 -140 770 -87 0 -103 -3 -120 -20z m-78 -855 c69 -49 101
+-104 106 -181 10 -148 -85 -254 -228 -254 -72 0 -122 19 -169 63 -120 114 -81
+323 74 394 19 8 57 12 102 10 61 -2 78 -7 115 -32z"/>
+        <path d="M5270 2160 c-20 -20 -20 -33 -20 -740 0 -850 -17 -760 143 -760 88 0
+106 3 120 18 16 17 17 83 17 740 0 852 16 762 -140 762 -87 0 -103 -3 -120
+-20z"/>
+        <path d="M2380 1596 c-244 -46 -408 -279 -370 -523 49 -317 408 -491 685 -333
+216 124 295 393 181 617 -90 178 -297 277 -496 239z m201 -249 c25 -14 59 -44
+79 -72 31 -43 35 -58 38 -121 4 -64 1 -78 -24 -123 -48 -90 -115 -125 -226
+-119 -62 3 -80 8 -118 35 -149 102 -129 338 35 409 17 7 62 13 101 14 55 0 80
+-5 115 -23z"/>
+        <path d="M4540 1576 c-244 -46 -408 -279 -370 -523 42 -273 315 -449 581 -375
+64 18 67 18 78 0 10 -16 25 -18 120 -18 92 0 110 3 124 18 15 16 17 49 17 258
+0 257 -7 309 -54 402 -90 177 -297 276 -496 238z m185 -237 c50 -24 100 -76
+121 -125 20 -47 17 -141 -5 -189 -39 -84 -120 -135 -216 -135 -135 0 -234 98
+-235 233 0 96 57 185 144 223 48 21 139 17 191 -7z"/>
+      </g>
+      <g class="nodemark" transform="translate(0,238) scale(0.1,-0.1)">
+        <path d="M922 2184 l-22 -15 0 -739 0 -739 22 -15 c17 -12 48 -16 124 -16 86
+0 103 3 118 19 15 16 16 61 16 477 0 252 4 454 8 449 13 -15 448 -844 471
+-897 l20 -48 100 0 c116 0 121 4 121 90 0 35 -8 67 -26 103 -118 234 -700
+1325 -712 1335 -24 19 -211 16 -240 -4z"/>
+        <path d="M1740 2181 c-81 -38 -104 -135 -50 -209 54 -76 140 -79 209 -8 105
+108 -22 282 -159 217z"/>
+      </g>
+    </svg>
+    </a>
+
+    <div class="card">
+      <h1 class="policy-title">Privacy Policy</h1>
+      <p class="policy-date">Last updated: 24 June 2026</p>
+
+      <p class="policy-intro">
+        Nodal ("we", "us", or "our") respects your privacy and is committed to protecting the
+        personal information you provide when joining our waitlist. This Privacy Policy explains
+        what information we collect, how we use it, and your rights regarding that information.
+      </p>
+
+      <div class="section">
+        <h2>1. Information We Collect</h2>
+        <p>When you join the Nodal waitlist, we may collect:</p>
+        <ul>
+          <li>Your email address</li>
+          <li>Your business name (optional)</li>
+          <li>Information you choose to provide about the software, tools, or systems you currently use (optional)</li>
+        </ul>
+        <p>We collect this information directly from you through our waitlist form.</p>
+      </div>
+
+      <div class="section">
+        <h2>2. How We Use Your Information</h2>
+        <p>We use the information you provide to:</p>
+        <ul>
+          <li>Contact you regarding early access to Nodal</li>
+          <li>Send updates about Nodal's development and launch</li>
+          <li>Better understand the needs of potential users</li>
+          <li>Prioritise product features and integrations</li>
+          <li>Improve our products and services</li>
+        </ul>
+        <p>We do not sell your personal information and do not use it for third-party advertising purposes.</p>
+      </div>
+
+      <div class="section">
+        <h2>3. How We Store and Protect Your Information</h2>
+        <p>We take reasonable technical and organisational measures to protect your information from unauthorised access, disclosure, alteration, or misuse.</p>
+        <p>Access to waitlist information is restricted to authorised members of the Nodal team who require access for business purposes.</p>
+      </div>
+
+      <div class="section">
+        <h2>4. Sharing Your Information</h2>
+        <p>We do not share, sell, rent, or disclose your personal information to advertisers, marketing companies, or unrelated third parties.</p>
+        <p>We may disclose information where required by law or where reasonably necessary to comply with legal obligations.</p>
+      </div>
+
+      <div class="section">
+        <h2>5. Data Retention</h2>
+        <p>We retain your information for as long as necessary to operate the Nodal waitlist, communicate with you about Nodal, and support our business operations.</p>
+        <p>You may request deletion of your information at any time.</p>
+      </div>
+
+      <div class="section">
+        <h2>6. International Data Transfers</h2>
+        <p>Your information may be stored or processed using service providers located in Australia or other countries. Where this occurs, we take reasonable steps to ensure your information is handled securely and in accordance with applicable privacy laws.</p>
+      </div>
+
+      <div class="section">
+        <h2>7. Your Rights</h2>
+        <p>You may request to:</p>
+        <ul>
+          <li>Access the personal information we hold about you</li>
+          <li>Correct or update your information</li>
+          <li>Delete your information</li>
+          <li>Unsubscribe from future communications</li>
+        </ul>
+        <p>To exercise any of these rights, please contact us using the details below.</p>
+      </div>
+
+      <div class="section">
+        <h2>8. Changes to This Policy</h2>
+        <p>We may update this Privacy Policy from time to time. Any changes will be published on this page together with an updated "Last updated" date.</p>
+      </div>
+
+      <div class="section">
+        <h2>9. Contact Us</h2>
+        <p>If you have any questions about this Privacy Policy or would like to access, update, or delete your information, please contact us at: <a href="mailto:contact@nodal-app.com">contact@nodal-app.com</a></p>
+      </div>
+    </div>
+
+    <div class="bottom-links">
+      <a href="index.html" class="back-link">← Back to home</a>
+      <button class="download-btn" onclick="window.print()">
+        <svg viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 10v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Download PDF
+      </button>
+    </div>
+
+  </div>
+</body>
+</html>
